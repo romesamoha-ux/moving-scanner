@@ -5,18 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Сканер MASTER-PEREEZDA.RU</title>
     
-    <!-- PWA Meta Tags для корректной установки -->
-    <link rel="manifest" href="/dvizhushchiysya-skanner/manifest.json">
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/moving-scanner/manifest.json">
     <meta name="theme-color" content="#4F81BD">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="format-detection" content="telephone=no">
     
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --primary: #4F81BD; --success: #4CAF50; --bg: #f4f6f8; --text: #333; }
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 80px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 90px; }
         
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 10; }
         .header h1 { margin: 0; font-size: 20px; }
@@ -24,13 +23,17 @@
         
         .container { padding: 15px; max-width: 600px; margin: 0 auto; }
         
-        /* Стили для заблокированного сканера */
-        #reader { width: 100%; background: black; border-radius: 12px; overflow: hidden; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: opacity 0.3s; }
-        #reader.scanning-paused { opacity: 0.3; pointer-events: none; filter: grayscale(100%); }
+        /* Стили для области камеры */
+        #reader { width: 100%; background: black; border-radius: 12px; overflow: hidden; margin-bottom: 15px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        #reader.active { display: block; }
+        
+        .scan-controls { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-scan { flex: 1; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-scan:active { opacity: 0.8; }
         
         .search-box { display: flex; gap: 10px; margin-bottom: 15px; }
         .search-input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
-        .search-btn { padding: 12px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .search-btn { padding: 12px 20px; background: #6c757d; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         
         .scan-result { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: none; border-left: 5px solid var(--success); box-shadow: 0 2px 5px rgba(0,0,0,0.05); animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -54,7 +57,7 @@
         .scanned-item .subtitle { font-size: 12px; color: #666; }
         .scanned-item .owner-tag { font-size: 12px; background: #e3f2fd; color: #1976d2; padding: 2px 6px; border-radius: 4px; margin-right: 8px; }
         
-        /* Новая галочка подтверждения */
+        /* Галочка подтверждения */
         .check-icon { 
             width: 28px; height: 28px; background: var(--success); color: white; 
             border-radius: 50%; display: flex; align-items: center; justify-content: center; 
@@ -81,7 +84,13 @@
     <div class="container">
         <div id="error-msg"></div>
         
+        <!-- Область камеры (скрыта по умолчанию) -->
         <div id="reader"></div>
+        
+        <!-- Кнопка запуска сканера -->
+        <div class="scan-controls">
+            <button class="btn-scan" id="startScanBtn" onclick="startScanner()">📸 Начать сканирование</button>
+        </div>
         
         <div class="search-box">
             <input type="text" class="search-input" id="searchInput" placeholder="Поиск по QR или названию...">
@@ -114,7 +123,8 @@
         
         let scannedItems = [];
         let scannedIds = new Set();
-        let isScanningPaused = false; // Флаг паузы сканирования
+        let html5QrcodeScanner = null;
+        let isScanning = false;
 
         // --- ФУНКЦИЯ: Загрузка истории из памяти телефона ---
         function loadHistory() {
@@ -142,10 +152,50 @@
             }
         }
 
+        // --- НОВАЯ ЛОГИКА: Ручное управление камерой ---
+        function startScanner() {
+            if (isScanning) return;
+            
+            const readerEl = document.getElementById('reader');
+            const btn = document.getElementById('startScanBtn');
+            
+            readerEl.classList.add('active');
+            btn.innerText = "⏳ Сканирование...";
+            btn.disabled = true;
+            isScanning = true;
+
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", 
+                { fps: 10, qrbox: { width: 250, height: 250 }, rememberLastUsedCamera: true },
+                false
+            );
+            
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        }
+
+        function stopScanner() {
+            if (!isScanning || !html5QrcodeScanner) return;
+            
+            html5QrcodeScanner.clear().then(() => {
+                document.getElementById('reader').classList.remove('active');
+                const btn = document.getElementById('startScanBtn');
+                btn.innerText = "📸 Начать сканирование";
+                btn.disabled = false;
+                isScanning = false;
+                html5QrcodeScanner = null;
+            }).catch(err => {
+                console.error("Failed to clear scanner", err);
+            });
+        }
+
         function onScanSuccess(decodedText, decodedResult) {
-            // Если сканирование на паузе, игнорируем новые коды
-            if (isScanningPaused) return;
             processScan(decodedText);
+            // Автоматически останавливаем камеру после успешного скана
+            stopScanner();
+        }
+
+        function onScanFailure(error) {
+            // Игнорируем ошибки фокусировки
         }
 
         function processScan(code) {
@@ -160,7 +210,7 @@
                 document.getElementById('res-owner').innerText = data.owner || "Не указан";
                 document.getElementById('last-scan').style.display = 'block';
                 
-                if (navigator.vibrate) navigator.vibrate(100);
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Двойная вибрация
 
                 // Защита от дублей
                 if (scannedIds.has(itemId)) {
@@ -177,19 +227,8 @@
                     time: new Date().toLocaleTimeString()
                 });
 
-                // Сохраняем сразу после сканирования
                 saveHistory();
                 updateListUI();
-
-                // === НОВАЯ ЛОГИКА: ПАУЗА СКАНЕРА НА 2 СЕКУНДЫ ===
-                isScanningPaused = true;
-                const readerEl = document.getElementById('reader');
-                if(readerEl) readerEl.classList.add('scanning-paused');
-                
-                setTimeout(() => {
-                    isScanningPaused = false;
-                    if(readerEl) readerEl.classList.remove('scanning-paused');
-                }, 2000); // 2000 мс = 2 секунды
             } else {
                 alert("Код не найден в базе: " + code);
             }
@@ -221,7 +260,7 @@
             [...scannedItems].reverse().forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'scanned-item';
-                // Добавлена галочка ✅ справа
+                // Добавлена галочка ✅
                 li.innerHTML = `
                     <div class="info">
                         <div class="title">${item.item}</div>
@@ -239,7 +278,6 @@
                 scannedItems = [];
                 scannedIds.clear();
                 
-                // Очищаем память телефона
                 localStorage.removeItem('mp_scanned_items');
                 localStorage.removeItem('mp_scanned_ids');
                 
@@ -278,23 +316,23 @@
             document.body.removeChild(link);
         }
 
-        // Инициализация камеры и загрузка истории
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            const errDiv = document.getElementById('error-msg');
-            errDiv.innerHTML = "<b>Ошибка:</b> Браузер не поддерживает камеру.";
-            errDiv.style.display = 'block';
-            document.getElementById('reader').style.display = 'none';
-        } else {
-            new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false).render(onScanSuccess);
-        }
-
-        // Загружаем историю при старте
-        window.addEventListener('load', loadHistory);
+        // Инициализация при загрузке
+        window.addEventListener('load', () => {
+            loadHistory();
+            
+            // Проверка поддержки камеры
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                const errDiv = document.getElementById('error-msg');
+                errDiv.innerHTML = "<b>Ошибка:</b> Браузер не поддерживает камеру.";
+                errDiv.style.display = 'block';
+                document.getElementById('startScanBtn').disabled = true;
+            }
+        });
 
         // Регистрация Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/dvizhushchiysya-skanner/sw.js')
+                navigator.serviceWorker.register('/moving-scanner/sw.js')
                     .then(reg => console.log('SW registered'))
                     .catch(err => console.log('SW failed'));
             });

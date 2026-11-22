@@ -1,19 +1,43 @@
-const CACHE_NAME = 'mp-scanner-v1';
+const CACHE_NAME = 'mp-scanner-v3'; // Изменили версию!
 const urlsToCache = [
+  '/moving-scanner/',
   '/moving-scanner/scanner.html',
-  'https://unpkg.com/html5-qrcode'
+  '/moving-scanner/manifest.json'
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // Активируем новый SW сразу
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
   );
 });
 
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName); // Удаляем старый кэш
+          }
+        })
+      );
+    })
+  );
+  return self.clients.claim();
+});
+
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
+    fetch(event.request)
+      .then(response => {
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseClone);
+        });
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

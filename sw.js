@@ -1,43 +1,24 @@
-const CACHE_NAME = 'mp-scanner-v3'; // Изменили версию!
-const urlsToCache = [
-  '/moving-scanner/',
-  '/moving-scanner/scanner.html',
-  '/moving-scanner/manifest.json'
-];
+const V = 'mp-v7';
 
-self.addEventListener('install', event => {
-  self.skipWaiting(); // Активируем новый SW сразу
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
+self.addEventListener('install', e => { self.skipWaiting(); });
+
+self.addEventListener('activate', e => {
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
 });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName); // Удаляем старый кэш
-          }
-        })
-      );
-    })
-  );
-  return self.clients.claim();
-});
-
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseClone);
-        });
-        return response;
-      })
-      .catch(() => caches.match(event.request))
-  );
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith((async () => {
+    try {
+      return await fetch(e.request, { cache: 'no-store' });
+    } catch (err) {
+      const c = await caches.match(e.request);
+      if (c) return c;
+      throw err;
+    }
+  })());
 });

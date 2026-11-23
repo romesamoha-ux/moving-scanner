@@ -1,16 +1,12 @@
 {
-  "name": "Сканер Master-Pereezda",
+  "name": "Сканер MASTER-PEREEZDA",
   "short_name": "MP Scanner",
-  "start_url": "/moving-scanner/scanner.html",
+  "start_url": "./scanner.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#4F81BD",
   "theme_color": "#4F81BD",
-  "description": "Система маркировки и приемки имущества для переезда",
   "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/3067/3067260.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "https://cdn-icons-png.flaticon.com/512/3067/3067260.png", "sizes": "512x512", "type": "image/png" }
   ]
 }

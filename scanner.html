@@ -1,368 +1,380 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Сканер MASTER-PEREEZDA.RU</title>
-    
-    <link rel="manifest" href="/moving-scanner/manifest.json">
-    <meta name="theme-color" content="#4F81BD">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        :root { --primary: #4F81BD; --success: #4CAF50; --bg: #f4f6f8; --text: #333; }
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; padding-bottom: 90px; }
-        
-        .header { background: var(--primary); color: white; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 10; }
-        .header h1 { margin: 0; font-size: 20px; }
-        .header p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; }
-        
-        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
-        
-        #reader { width: 100%; background: black; border-radius: 12px; overflow: hidden; margin-bottom: 15px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        #reader.active { display: block; }
-        
-        .scan-controls { display: flex; gap: 10px; margin-bottom: 15px; }
-        .btn-scan { flex: 1; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .btn-scan:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .search-box { display: flex; gap: 10px; margin-bottom: 10px; }
-        .search-input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
-        .search-btn { padding: 12px 20px; background: #6c757d; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        
-        /* Новые фильтры */
-        .filters { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .filter-select { flex: 1; min-width: 140px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; }
-        
-        .scan-result { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: none; border-left: 5px solid var(--success); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .scan-result .room { font-size: 16px; color: #1976d2; font-weight: bold; }
-        .scan-result .item { font-size: 18px; font-weight: bold; margin: 5px 0; }
-        .scan-result .owner { font-size: 16px; color: #d32f2f; font-weight: bold; }
-        
-        .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .list-header h3 { margin: 0; font-size: 18px; }
-        .badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 14px; }
-        
-        .scanned-list { list-style: none; padding: 0; margin: 0; }
-        .scanned-item { 
-            background: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-        }
-        .scanned-item .info { flex-grow: 1; }
-        .scanned-item .title { font-weight: bold; font-size: 14px; }
-        .scanned-item .subtitle { font-size: 12px; color: #666; }
-        .scanned-item .owner-tag { font-size: 12px; background: #e3f2fd; color: #1976d2; padding: 2px 6px; border-radius: 4px; margin-right: 8px; }
-        .check-icon { 
-            width: 28px; height: 28px; background: var(--success); color: white; 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-            font-size: 16px; font-weight: bold; flex-shrink: 0; 
-        }
-        
-        .bottom-panel { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; gap: 10px; z-index: 10; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .btn-export { background: var(--success); color: white; }
-        .btn-clear { background: #f44336; color: white; flex: 0.4; }
-        
-        #error-msg { color: #d32f2f; padding: 15px; text-align: center; background: #ffebee; border-radius: 8px; margin-bottom: 15px; display: none; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Сканер MASTER-PEREEZDA.RU</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4F81BD">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{--p:#4F81BD;--ok:#4CAF50;--bg:#f4f6f8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#333;margin:0;padding-bottom:88px}
+.hd{background:var(--p);color:#fff;padding:12px;text-align:center;position:sticky;top:0;z-index:20}
+.hd h1{margin:0;font-size:19px}.hd p{margin:4px 0 0;font-size:12px;opacity:.9}
+.vr{font-size:10px;opacity:.8;margin-top:3px}
+.ct{padding:12px;max-width:640px;margin:0 auto}
+#reader{width:100%;background:#000;border-radius:12px;overflow:hidden;margin-bottom:12px;display:none}
+#reader.on{display:block}#reader video{width:100%!important}
+.row{display:flex;gap:8px;margin-bottom:10px}
+.b{border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:15px;padding:13px}
+.b:active{opacity:.75}
+.bs{flex:1;background:var(--p);color:#fff;font-size:16px}
+.bx{flex:1;background:#f44336;color:#fff;display:none}
+.in{flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:16px;outline:none;min-width:0}
+.bf{background:#6c757d;color:#fff;padding:12px 16px}
+.fl{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.sl{flex:1;min-width:130px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;background:#fff}
+.rs{background:#fff;padding:14px;border-radius:12px;margin-bottom:12px;display:none;border-left:5px solid var(--ok);box-shadow:0 2px 5px rgba(0,0,0,.06)}
+.rs.dup{border-left-color:#ff9800}
+.rs .i{font-size:12px;color:#888;font-weight:bold}
+.rs .r{font-size:15px;color:#1976d2;font-weight:bold}
+.rs .t{font-size:18px;font-weight:bold;margin:4px 0}
+.rs .o{font-size:15px;color:#d32f2f;font-weight:bold}
+.rs .c{font-size:12px;color:#666}
+.lh{display:flex;justify-content:space-between;align-items:center;margin:6px 0 10px}
+.lh h3{margin:0;font-size:17px}
+.bg{background:var(--p);color:#fff;padding:3px 10px;border-radius:12px;font-size:13px}
+ul.L{list-style:none;padding:0;margin:0}
+li.I{background:#fff;padding:11px 12px;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+li.I .f{flex:1;min-width:0}li.I .t{font-weight:bold;font-size:14px}
+li.I .s{font-size:12px;color:#666;margin-top:2px}
+li.I .o{font-size:11px;background:#e3f2fd;color:#1976d2;padding:3px 6px;border-radius:4px;white-space:nowrap}
+.ck{width:28px;height:28px;background:var(--ok);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;flex-shrink:0}
+.dl{width:26px;height:26px;background:#eee;color:#999;border:none;border-radius:50%;font-size:15px;flex-shrink:0;cursor:pointer}
+.pn{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px;box-shadow:0 -2px 10px rgba(0,0,0,.1);display:flex;gap:8px;z-index:20}
+.bc{background:#f44336;color:#fff;flex:0 0 33%}.be{background:var(--ok);color:#fff;flex:1}
+.er{color:#d32f2f;padding:12px;background:#ffebee;border-radius:8px;margin-bottom:12px;display:none;font-size:14px}
+.em{text-align:center;color:#999;padding:25px 10px;font-size:14px}
+.ts{position:fixed;left:50%;transform:translateX(-50%);bottom:95px;background:#333;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:50;opacity:0;transition:.25s;pointer-events:none}
+.ts.on{opacity:.95}
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>Сканер имущества</h1>
-        <p>MASTER-PEREEZDA.RU | +7(495)180-45-68</p>
-    </div>
-    
-    <div class="container">
-        <div id="error-msg"></div>
-        <div id="reader"></div>
-        
-        <div class="scan-controls">
-            <button class="btn-scan" id="startScanBtn" onclick="startScanner()">📸 Начать сканирование</button>
-        </div>
-        
-        <div class="search-box">
-            <input type="text" class="search-input" id="searchInput" placeholder="Поиск по QR, названию, фамилии...">
-            <button class="search-btn" onclick="manualSearch()">Найти</button>
-        </div>
-        
-        <!-- НОВЫЕ ФИЛЬТРЫ -->
-        <div class="filters">
-            <select class="filter-select" id="filterOwner" onchange="applyFilters()">
-                <option value="">Все владельцы</option>
-            </select>
-            <select class="filter-select" id="filterCluster" onchange="applyFilters()">
-                <option value="">Все кластеры</option>
-            </select>
-        </div>
-        
-        <div class="scan-result" id="last-scan">
-            <div class="room" id="res-room"></div>
-            <div class="item" id="res-item"></div>
-            <div class="owner">Владелец: <span id="res-owner"></span></div>
-        </div>
+<div class="hd"><h1>Сканер имущества</h1>
+<p>MASTER-PEREEZDA.RU | +7(495)180-45-68 | +7(977)582-64-02</p>
+<div class="vr">версия 7.0 · позиций: <span id="tot">0</span></div></div>
 
-        <div class="list-header">
-            <h3>Лист приемки</h3>
-            <span class="badge" id="count-badge">0</span>
-        </div>
-        <ul class="scanned-list" id="scanned-list"></ul>
-    </div>
+<div class="ct">
+<div class="er" id="er"></div>
+<div id="reader"></div>
+<div class="row"><button class="b bs" id="bS">📸 Начать сканирование</button><button class="b bx" id="bX">✖ Стоп камера</button></div>
+<div class="row"><input class="in" id="q" placeholder="Поиск: ITM-001, фамилия, предмет..."><button class="b bf" id="bF">Найти</button></div>
+<div class="fl">
+<select class="sl" id="fO"><option value="">Все владельцы</option></select>
+<select class="sl" id="fC"><option value="">Все кластеры</option></select>
+<select class="sl" id="fR"><option value="">Все помещения</option></select>
+</div>
+<div class="rs" id="rs"><div class="i" id="xI"></div><div class="r" id="xR"></div><div class="t" id="xT"></div><div class="c" id="xC"></div><div class="o">Владелец: <span id="xO"></span></div></div>
+<div class="lh"><h3>Лист приемки</h3><span class="bg" id="cn">0 / 0</span></div>
+<ul class="L" id="ls"></ul><div class="em" id="em">Пока ничего не отсканировано</div>
+</div>
 
-    <div class="bottom-panel">
-        <button class="btn btn-clear" onclick="clearList()">Очистить</button>
-        <button class="btn btn-export" onclick="exportData()">Экспорт CSV/TXT</button>
-    </div>
+<div class="pn"><button class="b bc" id="bC">Очистить</button><button class="b be" id="bE">Экспорт CSV/TXT</button></div>
+<div class="ts" id="ts"></div>
 
-    <script>
-        const database = {"ITM-001": {"room": "Кабинет_1", "item": "Зеркало", "owner": "Не указан", "cluster": "Зеркало"}, "ITM-002": {"room": "Кабинет_1", "item": "Монитор комп", "owner": "Не указан", "cluster": "Компьютерные мониторы"}}; 
-        
-        let scannedItems = [];
-        let scannedIds = new Set();
-        let html5QrcodeScanner = null;
-        let isScanning = false;
-        let filteredItems = [];
+<script>
+/* БАЗА: [помещение, кластер, предмет, номера] */
+const SRC=[
+["Кабинет_1","Зеркало","Зеркало","1"],
+["Кабинет_1","Компьютерные мониторы","Монитор комп","2-7"],
+["Кабинет_1","Коробки","коробки","8-12"],
+["Кабинет_1","МФУ","мфу мини","13"],
+["Кабинет_1","Офисное кресло","Кресло","14-18"],
+["Кабинет_1","Растения","Цветы 4 шт","19"],
+["Кабинет_1","Столы","Маленький стол-тумба","20"],
+["Кабинет_1","Столы с тумбами","Стол стандарт","21-26"],
+["Кабинет_1","Тумбы от столов","Тумба под стол стандарт","27-32"],
+["Кабинет_1","Шкаф сейф","шкаф-сейф до 100кг","33-36"],
+["Кабинет_1","Шкафы","шкаф обычный","37-39"],
+["Кабинет_10","Компьютерные мониторы","Монитор","40"],
+["Кабинет_10","Офисное кресло","стулья","41-44"],
+["Кабинет_10","Прочее","вентилятор","45"],
+["Кабинет_10","Шкафы","шкаф","46"],
+["Кабинет_11","Компьютерные мониторы","монитор","47-50"],
+["Кабинет_11","Коробки","Коробок","51-55"],
+["Кабинет_11","Мягкая мебель","Кресла мягкие","56-59"],
+["Кабинет_11","Мягкая мебель","диван","60"],
+["Кабинет_11","Офисное кресло","стулья","61-63"],
+["Кабинет_11","Прочее","магнитно-маркерная доска","64"],
+["Кабинет_11","Проектор","и 1 выезжающий экран под проектор (демонтаж)","65"],
+["Кабинет_11","Проектор","проектор 1 (демонтаж)","66"],
+["Кабинет_11","Прочее","вешалка","67"],
+["Кабинет_11","Столы","стол","68"],
+["Кабинет_11","Столы журнальные","стол круглый","69"],
+["Кабинет_11","ТВ","телевизор","70"],
+["Кабинет_11","Тумба мини стандартная","тумба мал","71"],
+["Кабинет_11","Тумба под телевизор длинная","тумба под телевизор длинная","72"],
+["Кабинет_13","Зеркало","Зеркало 1 обычное настенное не большое","73"],
+["Кабинет_13","Компьютерные мониторы","монитор","74-75"],
+["Кабинет_13","Офисное кресло","стулья","76-79"],
+["Кабинет_13","Растения","цветы","80-81"],
+["Кабинет_13","Столы с тумбами","Стол стандарт","82-83"],
+["Кабинет_13","Тумба мини стандартная","тумба мал","84-86"],
+["Кабинет_13","Тумбы от столов","Тумба под стол стандарт","87-88"],
+["Кабинет_13","Шкаф сейф","метал шкаф","89-90"],
+["Кабинет_14","Компьютерные мониторы","монитор","91-94"],
+["Кабинет_14","Коробки","коробки","95-109"],
+["Кабинет_14","Офисное кресло","стулья","110-113"],
+["Кабинет_14","Растения","цветы","114"],
+["Кабинет_14","Столы с тумбами","Стол стандарт","115-116"],
+["Кабинет_14","Тумбы от столов","Тумба под стол стандарт","117-118"],
+["Кабинет_14","Шкафы","шкаф","119-120"],
+["Кабинет_14","Шкафы стекло","шкаф стекло","121"],
+["Кабинет_15","Офисное кресло","Кресло","122-136"],
+["Кабинет_15","Прочее","магнитная доска","137"],
+["Кабинет_15","Столы переговорные","большой стол 426см в длинну,делиться на 3 секции.","138"],
+["Кабинет_15","ТВ","большой монитор 200х100см","139"],
+["Кабинет_17","Компьютерные мониторы","Монитор","140-160"],
+["Кабинет_17","МФУ","МФУ мини","161"],
+["Кабинет_17","Офисное кресло","Стулья","162-185"],
+["Кабинет_17","Прочее","Доска магнитно-маркерная","186"],
+["Кабинет_17","Столы","Стол обычные(не стандартный)","187-199"],
+["Кабинет_17","Шкафы","Шкаф","200-202"],
+["Кабинет_18","Компьютерные мониторы","Монитор","203"],
+["Кабинет_18","Коробки","коробки","204-223"],
+["Кабинет_18","Мягкий диван","Диван","224"],
+["Кабинет_18","Сейф","Сейф до 100кг","225"],
+["Кабинет_18","Стеллаж","Стеллажи","226-235"],
+["Кабинет_18","Столы","Стол","236-237"],
+["Кабинет_18","Холодильник","Холодильник","238"],
+["Кабинет_18","Шкафы","Шкаф обычный","239-240"],
+["Кабинет_2","Компьютерные мониторы","Монитор","241-244"],
+["Кабинет_2","Коробки","коробки","245-249"],
+["Кабинет_2","МФУ","МФУ большая до 100кг","250"],
+["Кабинет_2","Офисное кресло","Кресло","251-253"],
+["Кабинет_2","Прочее","Магнитно-маркерная доска","254"],
+["Кабинет_2","Стеллаж","Стелажи","255-258"],
+["Кабинет_2","Столы","Столик мелкий","259"],
+["Кабинет_2","Столы с тумбами","Стол стандарт","260-261"],
+["Кабинет_2","Тумбы от столов","Тумба под стол стандарт","262-263"],
+["Кабинет_2","Шкафы","Шкаф","264-265"],
+["Кабинет_2","Шкафы стекло","Шкаф стекло","266"],
+["Кабинет_2","Шредер","Шредер маленький","267"],
+["Кабинет_2","тумба по пояс мелкая","Тумба по пояс мелкая","268"],
+["Кабинет_21","Картины","картина","269"],
+["Кабинет_21","Компьютерные мониторы","монитор","270-271"],
+["Кабинет_21","Мягкий диван","диван двухместный мягкий","272"],
+["Кабинет_21","Офисное кресло","стул-кресло","273"],
+["Кабинет_21","Принтер","мини принтер","274"],
+["Кабинет_21","Столы журнальные","журнальный столик","275"],
+["Кабинет_21","Столы с тумбами","Стол стандарт","276"],
+["Кабинет_21","Тумба мини стандартная","тумба мини","277"],
+["Кабинет_21","Тумбы от столов","Тумба под стол стандарт","278"],
+["Кабинет_21","Шкафы","шкаф пенал мини","279"],
+["Кабинет_21","Шредер","шредер мал","280"],
+["Кабинет_22","Компьютерные мониторы","Монитор","281-288"],
+["Кабинет_22","Коробки","коробки","289-293"],
+["Кабинет_22","Мягкое кресло","Кресло мягкие","294-295"],
+["Кабинет_22","Офисное кресло","Комп кресло","296-299"],
+["Кабинет_22","Столы с тумбами","Стол стандарт","300-303"],
+["Кабинет_22","Столы с тумбами","Тумба под стол стандарт","304-307"],
+["Кабинет_23","Коробки","коробки","308-312"],
+["Кабинет_23","Мягкий диван","Диван мягкий мелкий","313"],
+["Кабинет_23","Офисное кресло","Стул","314-317"],
+["Кабинет_23","Прочее","Моинтор","318-322"],
+["Кабинет_23","Прочее","Пуфик","323"],
+["Кабинет_23","Растения","Цветок","324"],
+["Кабинет_23","Столы","стол","325-327"],
+["Кабинет_23","Тумба мини стандартная","Тумба мини","328"],
+["Кабинет_23","Шкафы","Шкаф","329"],
+["Кабинет_24","Компьютерные мониторы","кресло комп","330-333"],
+["Кабинет_24","Коробки","коробки","334-343"],
+["Кабинет_24","МФУ","Мфу мал","344"],
+["Кабинет_24","МФУ","Мфу средняя","345"],
+["Кабинет_24","Столы","стол 2 как и везде","346"],
+["Кабинет_24","ТВ","телевизор 1 средний","347"],
+["Кабинет_24","Тумба мини стандартная","тумба","348-349"],
+["Кабинет_24","Шкафы","шкаф обычный","350"],
+["Кабинет_24","Шкафы стекло","шкаф стекло","351"],
+["Кабинет_3","Компьютерные мониторы","монитор","352-353"],
+["Кабинет_3","Коробки","коробки","354"],
+["Кабинет_3","Оргтехника и печать","мфу мини","355"],
+["Кабинет_3","Офисное кресло","кресло","356-357"],
+["Кабинет_3","Офисное кресло","стул","358-359"],
+["Кабинет_3","Сейф","сейф 1 до 50кг","360"],
+["Кабинет_3","Столы с тумбами","стол","361-362"],
+["Кабинет_3","Тумба под телевизор длинная","тумба длинная","363"],
+["Кабинет_3","Тумбы от столов","тумба под столы","364-365"],
+["Кабинет_3","Шкафы","шкаф обычный","366"],
+["Кабинет_3","Шредер","шредер","367"],
+["Кабинет_5","Компьютерные мониторы","монитор","368-369"],
+["Кабинет_5","Офисное кресло","стул","370-371"],
+["Кабинет_5","Офисное кресло","стул компьютеный","372-373"],
+["Кабинет_5","Столы с тумбами","стол 2 + тумбцы под них стандарт","374-375"],
+["Кабинет_5","Тумбы от столов","Тумба под стол стандарт","376-377"],
+["Кабинет_5","Шкафы","шкаф обычный","378-379"],
+["Кабинет_6","Компьютерные мониторы","монитор","380-384"],
+["Кабинет_6","Коробки","коробки","385-394"],
+["Кабинет_6","Мягкое кресло","кресло диван","395"],
+["Кабинет_6","Офисное кресло","рабоч кресло","396-398"],
+["Кабинет_6","Столы","мини стол","399"],
+["Кабинет_6","Столы с тумбами","Стол стандарт","400-402"],
+["Кабинет_6","Тумба мини стандартная","тумба мини","403"],
+["Кабинет_6","Тумбы от столов","Тумба под стол стандарт","404-406"],
+["Кабинет_6","Шкафы","шкаф обычный","407"],
+["Кабинет_6","тумба по пояс мелкая","тумба по пояс","408"],
+["Кабинет_7","Картины","картина настенная мелкие","409-412"],
+["Кабинет_7","Компьютерные мониторы","монитор","413"],
+["Кабинет_7","Офисное кресло","стул","414-416"],
+["Кабинет_7","Плотер","плотер 1 до 100кг нельзя переворачивать canon","417"],
+["Кабинет_7","Столы с тумбами","Стол стандарт","418"],
+["Кабинет_7","Тумбы от столов","Тумба под стол стандарт","419"],
+["Кабинет_7","Шкафы","шкаф обычный","420-421"],
+["Кабинет_9","Картины","картина настенная 3 шт","422-424"],
+["Кабинет_9","Компьютерные мониторы","монитор","425-426"],
+["Кабинет_9","Мягкий диван","диван мягкий","427-428"],
+["Кабинет_9","Офисное кресло","стулья","429-437"],
+["Кабинет_9","Прочее","Пропеллер статуэтка до 50 кг метал 1 шт.","438"],
+["Кабинет_9","Столы журнальные","круглый журнальный стлоик","439"],
+["Кабинет_9","Столы с тумбами","Стол стандарт","440"],
+["Кабинет_9","ТВ","телевизор в тумбе","441-442"],
+["Кабинет_9","Тумба под телевизор длинная","Тумба 1 шт(внутри 2 средних телевизора)","443"],
+["Кабинет_9","Тумбы длинные по пояс","тумба длинная 1 плюс минус 2.5 метра, кажется сплошная внутри мини холодильник под демонтаж(холодильник 1шт.)","444"],
+["Кабинет_9","Тумбы от столов","Тумба под стол стандарт","445"],
+["Кабинет_9","Шкафы","шкаф офисный","446-448"],
+["Кабинет_9","тумба по пояс мелкая","тумба по пояс","449"],
+["Кухня_1","Коробки","Коробки","450-454"],
+["Кухня_1","Кофе машина","кофемашина","455"],
+["Кухня_1","Офисное кресло","стулья","456-463"],
+["Кухня_1","Посудомойка","встроенный посудомойка в гарнитруе 1 под демонтаж","464"],
+["Кухня_1","СВЧ","свч","465-466"],
+["Кухня_1","Столы","столик","467-468"],
+["Кухня_1","Холодильник","встроенный холодильник в гарниутре","469"],
+["Кухня_2","Коробки","Коробки","470-474"],
+["Кухня_2","Кофе машина","кофемашина","475"],
+["Кухня_2","Офисное кресло","стул","476-481"],
+["Кухня_2","Посудомойка","посудомойка так же как в кухне №1 beko 160001skbp","482"],
+["Кухня_2","СВЧ","свч","483"],
+["Кухня_2","Столы","стол","484-485"],
+["Кухня_2","Холодильник","холодильник обычный не встроенный","486"],
+["Переговорная","Офисное кресло","Стулья","487-499"],
+["Переговорная","Проектор","проектор","500"],
+["Переговорная","Проектор","экран под проектор","501"],
+["Переговорная","Столы переговорные","Стол большой на 2 части делится(с подключками под столом, коммуникациями)","502"],
+["Переговорная","ТВ","Телек большой 200Х100","503"],
+["Переговорная","тумба по пояс мелкая","Тумба по пояс мелкая","504"],
+["Стекляшка","Шкафы, тумбы и стеллажи","Стеллажи","505-508"],
+["Стекляшка","Шкафы, тумбы и стеллажи","шкаф железный легкий","509"],
+["архив","Компьютерные мониторы","Монитор","510"],
+["архив","Коробки","коробки","511-525"],
+["архив","Офисное кресло","кресло","526"],
+["архив","Стеллаж","Стеллаж металл","527-528"],
+["архив","Столы","Рабочий стол","529"],
+["архив","Шкафы","Шкаф","530-534"],
+["зона_ресепшн","Компьютерные мониторы","монитор","535"],
+["зона_ресепшн","Мягкий диван","диван","536"],
+["зона_ресепшн","Мягкое кресло","кресло","537"],
+["зона_ресепшн","Офисное кресло","кресло рабочее","538-539"],
+["зона_ресепшн","Ресепшн","ресепшн","540"],
+["зона_ресепшн","Столы журнальные","столик","541"],
+["зона_ресепшн","Тумба мини стандартная","Тумбочка мини","542"],
+["зона_ресепшн","Тумбы длинные по пояс","тумба длинная по пояс","543"],
+["зумбокс","Коробки","коробки","544-547"],
+["зумбокс","МФУ","Мфу большая до 100кг","548"],
+["зумбокс","МФУ","мфу маленьких","549-550"],
+["зумбокс","Прочее","пылесосы","551-552"],
+["зумбокс","Прочее","стремянка","553-555"],
+["зумбокс","Прочее","телеги,","556"],
+["зумбокс","Столы","стол","557"],
+["зумбокс","Шкафы","шкаф обычный","558"],
+["зумбокс","Шредер","шредер большой","559"]
+];
 
-        function loadHistory() {
-            try {
-                const savedItems = localStorage.getItem('mp_scanned_items');
-                const savedIds = localStorage.getItem('mp_scanned_ids');
-                
-                if (savedItems && savedIds) {
-                    scannedItems = JSON.parse(savedItems);
-                    scannedIds = new Set(JSON.parse(savedIds));
-                    populateFilters();
-                    applyFilters();
-                }
-            } catch (e) {
-                console.error("Ошибка загрузки истории:", e);
-            }
-        }
+/* ФИО: заполнится после ответа Дианы. Формат: {"1-6":"Иванов","21":"Петров"} */
+const OWN={};
 
-        function saveHistory() {
-            try {
-                localStorage.setItem('mp_scanned_items', JSON.stringify(scannedItems));
-                localStorage.setItem('mp_scanned_ids', JSON.stringify([...scannedIds]));
-            } catch (e) {
-                console.error("Ошибка сохранения:", e);
-            }
-        }
+function each(rng,fn){String(rng).split(",").forEach(function(p){var a,b;if(p.indexOf("-")>-1){var t=p.split("-");a=+t[0];b=+t[1];}else{a=b=+p;}for(var n=a;n<=b;n++)fn(n);});}
+const DB={};
+SRC.forEach(function(r){each(r[3],function(n){DB["ITM-"+String(n).padStart(3,"0")]={room:r[0],cluster:r[1],item:r[2],owner:"Не указан"};});});
+for(var k in OWN){each(k,function(n){var id="ITM-"+String(n).padStart(3,"0");if(DB[id])DB[id].owner=String(OWN[k]).trim()||"Не указан";});}
 
-        function startScanner() {
-            if (isScanning) return;
-            
-            const readerEl = document.getElementById('reader');
-            const btn = document.getElementById('startScanBtn');
-            
-            readerEl.classList.add('active');
-            btn.innerText = "⏳ Сканирование...";
-            btn.disabled = true;
-            isScanning = true;
+/* ПАМЯТЬ: тройной резерв */
+var K="mp_accept_v7",items=[],ids=new Set(),sc=null,on=false,last="",lastT=0;
+function save(){var d=JSON.stringify(items);try{localStorage.setItem(K,d)}catch(e){}try{sessionStorage.setItem(K,d)}catch(e){}try{document.cookie=K+"="+encodeURIComponent(d)+";max-age=31536000;path=/"}catch(e){}}
+function load(){var d=null;try{d=localStorage.getItem(K)}catch(e){}
+if(!d){try{d=sessionStorage.getItem(K)}catch(e){}}
+if(!d){var m=document.cookie.match(new RegExp("(?:^|; )"+K+"=([^;]*)"));if(m){try{d=decodeURIComponent(m[1])}catch(e){}}}
+if(!d)return;try{var a=JSON.parse(d);if(Array.isArray(a)){items=a;ids=new Set(a.map(function(x){return x.id}))}}catch(e){}}
+function wipe(){try{localStorage.removeItem(K)}catch(e){}try{sessionStorage.removeItem(K)}catch(e){}try{document.cookie=K+"=;max-age=0;path=/"}catch(e){}}
 
-            html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
-            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-        }
+function $(i){return document.getElementById(i)}
+function toast(t){var e=$("ts");e.textContent=t;e.classList.add("on");setTimeout(function(){e.classList.remove("on")},1800)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function filters(){
+ function put(el,arr,lab){var cur=el.value;el.innerHTML='<option value="">'+lab+'</option>'+arr.map(function(v){return '<option>'+esc(v)+'</option>'}).join("");if(arr.indexOf(cur)>-1)el.value=cur;}
+ put($("fO"),[...new Set(items.map(function(i){return i.owner}))].sort(),"Все владельцы");
+ put($("fC"),[...new Set(items.map(function(i){return i.cluster}))].filter(Boolean).sort(),"Все кластеры");
+ put($("fR"),[...new Set(items.map(function(i){return i.room}))].sort(),"Все помещения");}
+function vis(){var o=$("fO").value,c=$("fC").value,r=$("fR").value;
+ return items.filter(function(i){return (!o||i.owner===o)&&(!c||i.cluster===c)&&(!r||i.room===r)})}
+function render(){var v=vis();$("cn").textContent=v.length+" / "+items.length;$("em").style.display=items.length?"none":"block";
+ $("ls").innerHTML=v.slice().reverse().map(function(i){return '<li class="I"><div class="f"><div class="t">'+esc(i.item)+'</div><div class="s">'+esc(i.id)+' · '+esc(i.room)+' · '+esc(i.cluster)+' · '+esc(i.time)+'</div></div><div class="o">'+esc(i.owner)+'</div><div class="ck">✓</div><button class="dl" data-id="'+esc(i.id)+'">×</button></li>'}).join("")}
+function result(d,dup){$("xI").textContent=d.id+(dup?"  ⚠ УЖЕ В СПИСКЕ":"  ✓ ПРИНЯТО");$("xR").textContent="Помещение: "+d.room;$("xT").textContent=d.item;$("xC").textContent="Кластер: "+d.cluster;$("xO").textContent=d.owner;var b=$("rs");b.style.display="block";b.classList.toggle("dup",!!dup)}
 
-        function stopScanner() {
-            if (!isScanning || !html5QrcodeScanner) return;
-            
-            html5QrcodeScanner.clear().then(() => {
-                document.getElementById('reader').classList.remove('active');
-                const btn = document.getElementById('startScanBtn');
-                btn.innerText = "📸 Начать сканирование";
-                btn.disabled = false;
-                isScanning = false;
-                html5QrcodeScanner = null;
-            }).catch(err => console.error("Failed to clear scanner", err));
-        }
+function accept(code){
+ var now=Date.now();if(code===last&&now-lastT<1500)return;last=code;lastT=now;
+ var k=String(code).split("|")[0].trim().toUpperCase();var m=k.match(/(\d{1,4})/);
+ if(!DB[k]&&m)k="ITM-"+String(parseInt(m[1],10)).padStart(3,"0");
+ var d=DB[k];if(!d){toast("Код не найден: "+code);return}
+ var dup=ids.has(k);result(Object.assign({id:k},d),dup);
+ if(navigator.vibrate)navigator.vibrate(dup?[60,60,60]:[110,50,110]);
+ if(dup){toast("Уже принято: "+d.item);return}
+ ids.add(k);items.push({id:k,room:d.room,cluster:d.cluster,item:d.item,owner:d.owner,time:new Date().toLocaleTimeString("ru-RU")});
+ save();filters();render();toast("✓ "+d.item);}
 
-        function onScanSuccess(decodedText) {
-            processScan(decodedText);
-            stopScanner();
-        }
+async function start(){
+ if(on)return;
+ if(!window.isSecureContext){$("er").innerHTML="Камера работает только по HTTPS."; $("er").style.display="block";return}
+ $("reader").classList.add("on");$("bS").style.display="none";$("bX").style.display="block";on=true;
+ try{sc=new Html5Qrcode("reader",{verbose:false});
+  await sc.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250},aspectRatio:1.0},function(t){accept(t);stop()},function(){});
+ }catch(e){$("er").innerHTML="Нет доступа к камере: "+esc(e)+"<br>Разрешите камеру в настройках сайта.";$("er").style.display="block";stop()}}
+async function stop(){$("bS").style.display="block";$("bX").style.display="none";
+ if(sc){try{await sc.stop();await sc.clear()}catch(e){}sc=null}
+ $("reader").classList.remove("on");on=false}
 
-        function onScanFailure(error) {}
+function find(){
+ var q=$("q").value.trim().toLowerCase();if(!q)return;
+ var h=Object.entries(DB).filter(function(e){var id=e[0],d=e[1];return id.toLowerCase().indexOf(q)>-1||d.item.toLowerCase().indexOf(q)>-1||d.room.toLowerCase().indexOf(q)>-1||d.cluster.toLowerCase().indexOf(q)>-1||d.owner.toLowerCase().indexOf(q)>-1});
+ if(!h.length){toast("Ничего не найдено");return}
+ if(h.length===1){accept(h[0][0]);$("q").value="";return}
+ $("cn").textContent=h.length+" найдено";$("em").style.display="none";
+ $("ls").innerHTML=h.map(function(e){var id=e[0],d=e[1];return '<li class="I"><div class="f"><div class="t">'+esc(d.item)+'</div><div class="s">'+esc(id)+' · '+esc(d.room)+' · '+esc(d.cluster)+'</div></div><div class="o">'+esc(d.owner)+'</div><button class="b bf ad" data-id="'+esc(id)+'" style="padding:8px 12px;font-size:15px">+</button></li>'}).join("");
+ toast("Найдено: "+h.length+". Нажмите + чтобы принять");}
 
-        function processScan(code) {
-            const parts = code.split('|');
-            const itemId = parts[0];
-            
-            if (database[itemId]) {
-                const data = database[itemId];
-                
-                document.getElementById('res-room').innerText = "Помещение: " + data.room;
-                document.getElementById('res-item').innerText = data.item;
-                document.getElementById('res-owner').innerText = data.owner || "Не указан";
-                document.getElementById('last-scan').style.display = 'block';
-                
-                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+function dl(c,n,t){var b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},1000)}
+function exp(){var v=vis();if(!v.length){toast("Список пуст");return}
+ var day=new Date().toISOString().slice(0,10);
+ var csv="\uFEFFID;Помещение;Кластер;Предмет;Владелец;Время\n";
+ v.forEach(function(r){csv+=[r.id,r.room,r.cluster,r.item,r.owner,r.time].map(function(x){return '"'+String(x).replace(/"/g,'""')+'"'}).join(";")+"\n"});
+ dl(csv,"Приемка_"+day+".csv","text/csv;charset=utf-8;");
+ var t="ЛИСТ ПРИЕМКИ — MASTER-PEREEZDA.RU\nДата: "+new Date().toLocaleString("ru-RU")+"\nВсего: "+v.length+"\n\n";
+ v.forEach(function(r,i){t+=(i+1)+". ["+r.id+"] "+r.room+" / "+r.cluster+" / "+r.item+" (Владелец: "+r.owner+") — "+r.time+"\n"});
+ setTimeout(function(){dl(t,"Приемка_"+day+".txt","text/plain;charset=utf-8;")},400)}
 
-                if (scannedIds.has(itemId)) {
-                    alert("Этот предмет уже в списке: " + data.item);
-                    return;
-                }
+$("bS").onclick=start;$("bX").onclick=stop;$("bF").onclick=find;
+$("q").addEventListener("keydown",function(e){if(e.key==="Enter")find()});
+["fO","fC","fR"].forEach(function(i){$(i).onchange=render});
+$("bC").onclick=function(){if(confirm("Очистить весь лист приемки?")){items=[];ids.clear();wipe();filters();render();$("rs").style.display="none";toast("Список очищен")}};
+$("bE").onclick=exp;
+$("ls").addEventListener("click",function(e){var d=e.target.closest(".dl"),a=e.target.closest(".ad");
+ if(d){var id=d.dataset.id;items=items.filter(function(x){return x.id!==id});ids.delete(id);save();filters();render();toast("Убрано: "+id)}
+ if(a){accept(a.dataset.id)}});
+document.addEventListener("visibilitychange",function(){if(document.hidden&&on)stop()});
 
-                scannedIds.add(itemId);
-                scannedItems.push({
-                    id: itemId,
-                    room: data.room,
-                    item: data.item,
-                    owner: data.owner || "Не указан",
-                    cluster: data.cluster || "",
-                    time: new Date().toLocaleTimeString()
-                });
+$("tot").textContent=Object.keys(DB).length;
+load();filters();render();
+if(items.length)toast("Восстановлено записей: "+items.length);
 
-                saveHistory();
-                populateFilters();
-                applyFilters();
-            } else {
-                alert("Код не найден в базе: " + code);
-            }
-        }
-
-        function manualSearch() {
-            const query = document.getElementById('searchInput').value.trim().toLowerCase();
-            if (!query) return;
-            
-            for (const [id, data] of Object.entries(database)) {
-                if (id.toLowerCase().includes(query) || 
-                    data.item.toLowerCase().includes(query) || 
-                    data.room.toLowerCase().includes(query) ||
-                    (data.owner && data.owner.toLowerCase().includes(query))) {
-                    processScan(id);
-                    document.getElementById('searchInput').value = '';
-                    return;
-                }
-            }
-            alert("Ничего не найдено по запросу: " + query);
-        }
-
-        // НОВАЯ ФУНКЦИЯ: Заполнение фильтров
-        function populateFilters() {
-            const owners = [...new Set(scannedItems.map(item => item.owner))].sort();
-            const clusters = [...new Set(scannedItems.map(item => item.cluster))].filter(c => c).sort();
-            
-            const ownerSelect = document.getElementById('filterOwner');
-            const clusterSelect = document.getElementById('filterCluster');
-            
-            ownerSelect.innerHTML = '<option value="">Все владельцы</option>';
-            owners.forEach(owner => {
-                const option = document.createElement('option');
-                option.value = owner;
-                option.textContent = owner;
-                ownerSelect.appendChild(option);
-            });
-            
-            clusterSelect.innerHTML = '<option value="">Все кластеры</option>';
-            clusters.forEach(cluster => {
-                const option = document.createElement('option');
-                option.value = cluster;
-                option.textContent = cluster;
-                clusterSelect.appendChild(option);
-            });
-        }
-
-        // НОВАЯ ФУНКЦИЯ: Применение фильтров
-        function applyFilters() {
-            const ownerFilter = document.getElementById('filterOwner').value;
-            const clusterFilter = document.getElementById('filterCluster').value;
-            
-            filteredItems = scannedItems.filter(item => {
-                const matchOwner = !ownerFilter || item.owner === ownerFilter;
-                const matchCluster = !clusterFilter || item.cluster === clusterFilter;
-                return matchOwner && matchCluster;
-            });
-            
-            updateListUI();
-        }
-
-        function updateListUI() {
-            const list = document.getElementById('scanned-list');
-            const badge = document.getElementById('count-badge');
-            
-            list.innerHTML = '';
-            badge.innerText = filteredItems.length;
-            
-            [...filteredItems].reverse().forEach(item => {
-                const li = document.createElement('li');
-                li.className = 'scanned-item';
-                li.innerHTML = `
-                    <div class="info">
-                        <div class="title">${item.item}</div>
-                        <div class="subtitle">${item.room} • ${item.time}</div>
-                    </div>
-                    <div class="owner-tag">${item.owner}</div>
-                    <div class="check-icon">✓</div>
-                `;
-                list.appendChild(li);
-            });
-        }
-
-        function clearList() {
-            if (confirm("Очистить весь список отсканированных вещей?")) {
-                scannedItems = [];
-                scannedIds.clear();
-                filteredItems = [];
-                
-                localStorage.removeItem('mp_scanned_items');
-                localStorage.removeItem('mp_scanned_ids');
-                
-                populateFilters();
-                updateListUI();
-                document.getElementById('last-scan').style.display = 'none';
-            }
-        }
-
-        function exportData() {
-            if (filteredItems.length === 0) {
-                alert("Список пуст.");
-                return;
-            }
-
-            let csvContent = "\uFEFFID,Помещение,Кластер,Предмет,Владелец,Время\n";
-            filteredItems.forEach(row => {
-                csvContent += `"${row.id}","${row.room}","${row.cluster}","${row.item}","${row.owner}","${row.time}"\n`;
-            });
-            downloadFile(csvContent, "Приемка_" + new Date().toISOString().slice(0,10) + ".csv", "text/csv;charset=utf-8;");
-
-            let txtContent = `ЛИСТ ПРИЕМКИ - MASTER-PEREEZDA.RU\nДата: ${new Date().toLocaleString()}\n\n`;
-            filteredItems.forEach((row, idx) => {
-                txtContent += `${idx+1}. [${row.id}] ${row.room} / ${row.cluster} / ${row.item} (Владелец: ${row.owner}) - ${row.time}\n`;
-            });
-            downloadFile(txtContent, "Приемка_" + new Date().toISOString().slice(0,10) + ".txt", "text/plain;charset=utf-8;");
-        }
-
-        function downloadFile(content, filename, type) {
-            const blob = new Blob([content], { type: type });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        window.addEventListener('load', () => {
-            loadHistory();
-            
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                const errDiv = document.getElementById('error-msg');
-                errDiv.innerHTML = "<b>Ошибка:</b> Браузер не поддерживает камеру.";
-                errDiv.style.display = 'block';
-                document.getElementById('startScanBtn').disabled = true;
-            }
-        });
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/moving-scanner/sw.js')
-                    .then(reg => console.log('SW registered'))
-                    .catch(err => console.log('SW failed'));
-            });
-        }
-    </script>
+/* Service Worker: обновляем принудительно */
+if('serviceWorker' in navigator){
+ navigator.serviceWorker.register('sw.js').then(function(r){r.update()}).catch(function(){});
+ navigator.serviceWorker.addEventListener('controllerchange',function(){location.reload()});
+}
+</script>
 </body>
 </html>
